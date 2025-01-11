@@ -20,7 +20,6 @@ typedef struct SNode {
     };
 } SNode;
 
-
 SNode* sn_new_empty() {
     SNode* snode = malloc(sizeof(SNode));
     *snode = (SNode) { .type = LIST, .list = NULL, .next = NULL };
@@ -286,5 +285,15 @@ int sn_list_len(SNode* snode) {
         len += 1;
     }
     return len;
+}
+
+int sn_next_count(SNode* snode) {
+    int count = 0;
+    SNode* after = snode->next;
+    while (after != NULL) {
+        after = after->next;
+        count += 1;
+    }
+    return count;
 }
 
