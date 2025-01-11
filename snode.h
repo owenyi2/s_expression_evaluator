@@ -121,12 +121,16 @@ void sn_free_recursive(SNode* snode) {
 
 
 // TODO: freeing a partially constructed s-expression due to a parse error is a huge fucking PIA  but nevertheless extremely necessary
-SNode* _sn_parse_recursive(FILE* fptr) { 
+SNode* _sn_parse_recursive(FILE* fptr, int* _error_flag) { 
     SNode* snode = NULL; 
+    if (*_error_flag != 0) {
+        return snode;
+    }
     
     char next_char = fgetc(fptr);
     if (next_char == EOF) {
         fprintf(stderr, "_sn_parse_recursive: Unexpected EOF\n");
+        *_error_flag = 1;
         return NULL;
     }
 
@@ -135,8 +139,8 @@ SNode* _sn_parse_recursive(FILE* fptr) {
         case '(':
             snode = malloc(sizeof(SNode));
             snode->type = LIST;
-            snode->list = _sn_parse_recursive(fptr);
-            snode->next = _sn_parse_recursive(fptr);
+            snode->list = _sn_parse_recursive(fptr, _error_flag);
+            snode->next = _sn_parse_recursive(fptr, _error_flag);
             break;
         /* terminating condition -> do nothing */
         case ')':
@@ -146,7 +150,7 @@ SNode* _sn_parse_recursive(FILE* fptr) {
         case '\n':
         case '\r':
         case '\t':
-            snode = _sn_parse_recursive(fptr);
+            snode = _sn_parse_recursive(fptr, _error_flag);
             break;
         /* anything else -> this is beginning of an atom */
         default: {
@@ -158,7 +162,7 @@ SNode* _sn_parse_recursive(FILE* fptr) {
                 next_char == ' '  || 
                 next_char == '\n' || 
                 next_char == '\r' ||
-                next_char == '\t' || 
+                next_char == '\t' ||
                 next_char == EOF
             )) {
                 atom[atom_length] = next_char;
@@ -172,7 +176,7 @@ SNode* _sn_parse_recursive(FILE* fptr) {
             snode = malloc(sizeof(SNode));
             snode->type = ATOM;
             snode->atom = atom;
-            snode->next = _sn_parse_recursive(fptr);
+            snode->next = _sn_parse_recursive(fptr, _error_flag);
             break;
         }
 
@@ -180,25 +184,25 @@ SNode* _sn_parse_recursive(FILE* fptr) {
     return snode;
 }
 
-SNode* sn_parse(FILE* fptr) {
+SNode* sn_parse(FILE* fptr, int* error_flag) {
+    int _error_flag = 0;
+
     SNode* snode = malloc(sizeof(SNode));
     char next_char = fgetc(fptr);
     if (next_char == EOF) {
-        sn_free_recursive(snode);
         fprintf(stderr, "_sn_parse_recursive: Unexpected EOF\n");
-        return NULL;
+        _error_flag = 1;
     }
 
     switch (next_char) {
         case '(':
             snode->type = LIST;
-            snode->list = _sn_parse_recursive(fptr);
+            snode->list = _sn_parse_recursive(fptr, &_error_flag);
             snode->next = NULL;
             break;
         case ')':
-            sn_free_recursive(snode);
-            fprintf(stderr, "_sn_parse_recursive: Unexpected EOF\n");
-            return NULL;
+            fprintf(stderr, "_sn_parse_recursive: Unexpected )\n");
+            _error_flag = 1;
             break;
         case ' ':
         case '\n':
@@ -229,7 +233,15 @@ SNode* sn_parse(FILE* fptr) {
         }
     }
 
-    return snode; 
+    if (_error_flag != 0) {
+        if (error_flag != NULL) {
+            *error_flag = 1;
+        }
+        sn_free_recursive(snode); 
+        return NULL;
+    } else {
+        return snode; 
+    }
 }
 
 void debug_char_atom(void* atom) {
