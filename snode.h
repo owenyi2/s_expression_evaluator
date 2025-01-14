@@ -297,3 +297,13 @@ int sn_next_count(SNode* snode) {
     return count;
 }
 
+int sn_all_atomic(SNode* snode) {
+    assert(snode->type == LIST); 
+    int all_atomic = 1;
+    SNode* current = snode->list;
+    while (current != NULL) {
+        all_atomic = all_atomic && (current->type == ATOM);
+        current = current->next;
+    }
+    return all_atomic;
+}

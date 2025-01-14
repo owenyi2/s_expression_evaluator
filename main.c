@@ -52,23 +52,40 @@ SNode* parse_userline(char* input_buffer, int input_size, int* parse_error_flag)
         return NULL;
     } 
     fclose(input_as_file);
-    return snode;
-        
+    return snode; 
 }
 
 int main() {
     char* input_buffer = NULL;
-    int* input_size;
+    int input_size = -1;
     int parse_error_flag = 0;
+    double result = 0;
+    HashMap environment = hm_new_with_capacity(sizeof(double), 128);
+
     SNode* snode;
     while (1) {
+        /* Prompt */
         printf("> ");
-        readline(&input_buffer, input_size);
-        snode = parse_userline(input_buffer, *input_size, &parse_error_flag);
+
+        /* Get/Parse input */
+        readline(&input_buffer, &input_size);
+        snode = parse_userline(input_buffer, input_size, &parse_error_flag);
         if (parse_error_flag != 0) {
             parse_error_flag = 0;
             continue;
         }
+
+        /* Debug Info */
+        printf("DEBUG: ");
+        sn_debug(snode, debug_eval_atom);
+        printf("\n");
+
+        /* Evaluate */
+        if (!evaluate_snode(snode, &result, &environment)) {
+            printf("%f\n", result);
+        }
+
+        /* Clean up */
         if (snode != NULL) {
             sn_free_recursive(snode);
         }
