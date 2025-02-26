@@ -29,13 +29,13 @@ typedef struct HashMapCell {
 
 typedef struct HashMap {
     HashMapCell* map;
-    DynamicArena arena; 
+    DynamicArena* arena; 
     size_t len;
     size_t capacity;
 } HashMap;
 
 HashMap hm_new_with_capacity(size_t element_size, size_t capacity) {
-    DynamicArena arena = da_new_with_capacity(element_size, capacity);
+    DynamicArena* arena = da_new_with_capacity(element_size, capacity);
     HashMapCell* map = calloc(capacity, sizeof(HashMapCell));
 
     HashMap hm = { .map = map, .arena = arena, .len = 0, .capacity = capacity };
@@ -90,7 +90,7 @@ void* hm_get(HashMap* hm, char* key) {
     if (hm->map[index].key == NULL) {
         return NULL;
     } else {
-        return da_get(&hm->arena, hm->map[index].value_loc);
+        return da_get(hm->arena, hm->map[index].value_loc);
     }
 }
 
@@ -104,11 +104,11 @@ void hm_insert(HashMap* hm, char* key, void* element) {
         index = _linear_probe(hm->map, hm->capacity, key);
 
         /* element is not in HashMap */ 
-        hm->map[index].key = malloc(strlen(key));
-        memcpy(hm->map[index].key, key, strlen(key));
+        hm->map[index].key = malloc(strlen(key) + 1);
+        strcpy(hm->map[index].key, key);
         hm->len += 1;
     } 
-    hm->map[index].value_loc = da_push(&hm->arena, element); 
+    hm->map[index].value_loc = da_push(hm->arena, element); 
 }
 
 void hm_remove(HashMap* hm, char* key) {
@@ -145,6 +145,12 @@ void hm_remove(HashMap* hm, char* key) {
             break;
         }
     }
+}
 
+void hm_free(HashMap* hm) {
+    da_free(hm->arena);
+    free(hm->map);
+    free(hm);
 }
 #endif
+

@@ -16,10 +16,11 @@ DynamicArena {
     int free_list; /* -1 represents freelist is empty */
 } DynamicArena;
 
-DynamicArena da_new_with_capacity(size_t element_size, size_t capacity) {
+DynamicArena* da_new_with_capacity(size_t element_size, size_t capacity) {
     size_t element_size_plus = element_size + sizeof(int); 
     void* data = malloc(element_size_plus * capacity);
-    DynamicArena da = { .data = data, .element_size = element_size, .element_size_plus = element_size_plus, .len = 0, .capacity = capacity, .free_list = -1 };
+    DynamicArena* da = malloc(sizeof(DynamicArena));
+    *da = (DynamicArena) { .data = data, .element_size = element_size, .element_size_plus = element_size_plus, .len = 0, .capacity = capacity, .free_list = -1 };
     return da;
 }
 
@@ -112,8 +113,10 @@ void da_remove(DynamicArena* da, int index) {
     /* Other thing we could try: is make int* index so that we can zero it out afterwards the same way that you NULL a pointer after freeing */
 }
 
-
-
+void da_free(DynamicArena* da) {
+    free(da->data);
+    free(da);
+}
 /*
 
 the relative index for each cell is either
@@ -124,3 +127,4 @@ another: Indicating it is in the middle of the freelist
 */
 
 #endif
+
