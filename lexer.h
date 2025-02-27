@@ -232,8 +232,8 @@ int lx_next_token(Lexer* lx, Token* token) {
             }
         }
     }
-    fprintf(stderr, "lexer: ");
-    debug_token(*token);
+    // fprintf(stderr, "lexer: ");
+    // debug_token(*token);
     lx_next_char(lx);
     return 0;
 }

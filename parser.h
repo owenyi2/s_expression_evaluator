@@ -15,20 +15,22 @@
 typedef struct Parser {
     Lexer* lx;   
     Token curr_token;
+    int error; 
 } Parser;
 
 void ps_next_token(Parser* ps) {
-    fprintf(stderr, "%d\n", lx_next_token(ps->lx, &(ps->curr_token)));
-    fprintf(stderr, "parser: ");
-    debug_token(ps->curr_token);  
+    lx_next_token(ps->lx, &(ps->curr_token));
 }
 
 Parser* ps_new(Lexer* lx) {
     Parser* ps = malloc(sizeof(Parser));
     ps->lx = lx;
     ps_next_token(ps);
+    ps->error = 0;
+ 
     return ps;
 }
+
 int ps_accept(Parser* ps, enum TokenType token_type, Token* return_token) {
     if (token_type == ps->curr_token.type) {
         ps_next_token(ps);
@@ -54,11 +56,11 @@ int ps_accept_atom(Parser* ps, Token* return_token) {
         case LOG:
         case NUMBER:
         case IDENTIFIER:
-            fprintf(stderr, "ps_accept_atom\n");
             *return_token = ps->curr_token;
             ps_next_token(ps);
             return 1;
         default:
+            ps->error = 1;
             return 0;
     }
 }
@@ -67,18 +69,18 @@ int ps_expect(Parser* ps, enum TokenType token_type, Token* return_token) {
     if (ps_accept(ps, token_type, return_token)) {
         return 1;
     }
-    fprintf(stderr, "ps_expect error\n");
+    // fprintf(stderr, "ps_expect error\n");
+    ps->error = 1;
     return 0;
 }
 
 void ps_atom(Parser* ps, SNode** snode) {
     Token token;
     if (ps_accept_atom(ps, &token)) {
-        // THIS IS WHERE THE BUG IS maybe?
-        // We call ps_accept_atom idk
         *snode = sn_new_atom(ea_from_token(&token));
     } else {
-        fprintf(stderr, "ps_atom: syntax error\n");
+        ps->error = 1;
+        // fprintf(stderr, "ps_atom: syntax error\n");
         // ps_next_token(ps); 
     }
 }

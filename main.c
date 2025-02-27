@@ -42,7 +42,7 @@ int parse_userline(char* input_buffer, int input_size, SNode** snode) {
     Parser* ps = ps_new(lx);
     Token token;
     ps_parse(ps, snode);
-    return 0;
+    return ps->error;
 }
 
 int main() {
@@ -57,6 +57,8 @@ int main() {
         /* Get/Parse input */
         readline(&input_buffer, &input_size);
         if (parse_userline(input_buffer, input_size, &snode) != 0) {
+            sn_free_recursive(snode);
+            fprintf(stderr, "Syntax Error\n");
             continue;
         }
         
