@@ -98,8 +98,10 @@ void lx_next_char(Lexer* lx) {
     lx->curr_pos += 1;
     if (lx->curr_pos >= lx->input_size) {
         lx->curr_char = '\0';
+        lx->curr_pos = lx->input_size - 1;
+    } else {
+        lx->curr_char = lx->input[lx->curr_pos];
     }
-    lx->curr_char = lx->input[lx->curr_pos];
 }
 
 char lx_peek(Lexer* lx) {
@@ -224,7 +226,7 @@ int lx_next_token(Lexer* lx, Token* token) {
                 } else {
                     token->type = IDENTIFIER;
                     token->identifier = malloc(sizeof(temp));
-                    strncpy(token->identifier, temp, sizeof(temp));
+                    strncpy(token->identifier, temp, len);
                 }
             } else {
                 fprintf(stderr, "Lexer Error: Unknown symbol, %c\n", lx->curr_char);     

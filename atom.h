@@ -36,7 +36,7 @@ typedef struct EvalAtom {
 
 void ea_free(void* atom) {
     EvalAtom* eval_atom = (EvalAtom*) atom;
-    if (eval_atom->type == IDENTIFIER) {
+    if (eval_atom->type == EVAL_ATOM_IDENTIFIER) {
         free(eval_atom->identifier);
     }
     free(eval_atom);

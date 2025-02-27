@@ -14,14 +14,14 @@ enum SNodeType {
 };
 
 typedef struct SNode SNode;
-typedef struct SNode {
+struct SNode {
     enum SNodeType type;
     SNode* next;
     union {
         void* atom;
         SNode* list;
     };
-} SNode;
+};
 
 SNode* sn_new_empty() {
     SNode* snode = malloc(sizeof(SNode));

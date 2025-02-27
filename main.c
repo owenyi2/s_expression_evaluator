@@ -40,7 +40,6 @@ void readline(char** buffer, int* buffer_size) {
 int parse_userline(char* input_buffer, int input_size, SNode** snode) {  
     Lexer* lx = lx_new(input_buffer, input_size);
     Parser* ps = ps_new(lx);
-    Token token;
     ps_parse(ps, snode);
     return ps->error;
 }
