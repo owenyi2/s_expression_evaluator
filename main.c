@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "snode.h"
-#include "atom.h"
+#include "parser.h"
 
 void readline(char** buffer, int* buffer_size) {
 /* based on https://brennan.io/2015/01/16/write-a-shell-in-c */
@@ -37,30 +37,17 @@ void readline(char** buffer, int* buffer_size) {
     }
 }
 
-SNode* parse_userline(char* input_buffer, int input_size, int* parse_error_flag) {
-    FILE* input_as_file = fmemopen(input_buffer, input_size, "r");
-
-    SNode* snode = sn_parse(input_as_file, parse_error_flag); 
-    
-    if (*parse_error_flag != 0) {
-        fclose(input_as_file);
-        return NULL;
-    } 
-    *parse_error_flag = type_check_snode(snode);
-    if (*parse_error_flag != 0) {
-        fclose(input_as_file);
-        return NULL;
-    } 
-    fclose(input_as_file);
-    return snode; 
+int parse_userline(char* input_buffer, int input_size, SNode** snode) {  
+    Lexer* lx = lx_new(input_buffer, input_size);
+    Parser* ps = ps_new(lx);
+    Token token;
+    ps_parse(ps, snode);
+    return 0;
 }
 
 int main() {
     char* input_buffer = NULL;
     int input_size = -1;
-    int parse_error_flag = 0;
-    double result = 0;
-    HashMap environment = hm_new_with_capacity(sizeof(double), 128);
 
     SNode* snode;
     while (1) {
@@ -69,21 +56,14 @@ int main() {
 
         /* Get/Parse input */
         readline(&input_buffer, &input_size);
-        snode = parse_userline(input_buffer, input_size, &parse_error_flag);
-        if (parse_error_flag != 0) {
-            parse_error_flag = 0;
+        if (parse_userline(input_buffer, input_size, &snode) != 0) {
             continue;
         }
-
+        
         /* Debug Info */
         printf("DEBUG: ");
         sn_debug(snode, debug_eval_atom);
         printf("\n");
-
-        /* Evaluate */
-        if (!evaluate_snode(snode, &result, &environment)) {
-            printf("%f\n", result);
-        }
 
         /* Clean up */
         if (snode != NULL) {
@@ -94,3 +74,4 @@ int main() {
         free(input_buffer);
     }
 }
+
