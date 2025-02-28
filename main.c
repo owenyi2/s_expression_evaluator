@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "snode.h"
 #include "parser.h"
@@ -41,23 +42,35 @@ int parse_userline(char* input_buffer, int input_size, SNode** snode) {
     Lexer* lx = lx_new(input_buffer, input_size);
     Parser* ps = ps_new(lx);
     ps_parse(ps, snode);
-    return ps->error;
+
+    int error = ps->error;
+    free(lx);
+    free(ps);
+    return error;
 }
 
 int main() {
-    char* input_buffer = NULL;
+    char* input_buffer = calloc(4, 1);
     int input_size = -1;
 
-    SNode* snode;
+    SNode* snode = NULL;
     while (1) {
         /* Prompt */
         printf("> ");
 
         /* Get/Parse input */
         readline(&input_buffer, &input_size);
+        if (strcmp("exit", input_buffer) == 0) {
+            break;
+        }
+
         if (parse_userline(input_buffer, input_size, &snode) != 0) {
-            sn_free_recursive(snode);
+            if (snode != NULL) {
+                sn_free_recursive(snode);
+            }
+
             fprintf(stderr, "Syntax Error\n");
+            snode = NULL;
             continue;
         }
         
@@ -69,6 +82,7 @@ int main() {
         /* Clean up */
         if (snode != NULL) {
             sn_free_recursive(snode);
+	    snode = NULL;
         }
     }
     if (input_buffer != NULL) {

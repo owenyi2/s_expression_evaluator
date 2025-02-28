@@ -81,7 +81,7 @@ void debug_token(Token token) {
         case IDENTIFIER:
             fprintf(stderr, "debug_token: IDENTIFIER = %s\n", token.identifier);
             break;
-        case -1:
+        case END:
             fprintf(stderr, "debug_token: END\n");
             break;
     }
@@ -92,6 +92,7 @@ typedef struct Lexer {
     size_t input_size;
     size_t curr_pos;
     char curr_char;
+    int end;
 } Lexer;
 
 void lx_next_char(Lexer* lx) {
@@ -113,7 +114,7 @@ char lx_peek(Lexer* lx) {
 
 Lexer* lx_new(char* input, size_t input_size) {
     Lexer* lx = malloc(sizeof(Lexer));
-    *lx = (Lexer) {.input = input, .input_size = input_size, .curr_pos = -1, .curr_char = '\0' };
+    *lx = (Lexer) {.input = input, .input_size = input_size, .curr_pos = -1, .curr_char = '\0', .end = 0 };
     lx_next_char(lx);
     return lx;
 }
@@ -169,6 +170,10 @@ int is_keyword(char* input, enum TokenType* keyword) {
 }
 
 int lx_next_token(Lexer* lx, Token* token) {
+    if (lx->end) {
+        token->type = END;
+        return 0;
+    }
     lx_skip_whitespace(lx);
  
     switch (lx->curr_char) {
@@ -195,6 +200,7 @@ int lx_next_token(Lexer* lx, Token* token) {
             break;
         case '\0':
             token->type = END;
+            lx->end = 1;
             break;
         default: {
             if (is_digit(lx->curr_char)) {
@@ -221,12 +227,14 @@ int lx_next_token(Lexer* lx, Token* token) {
                 size_t len = lx->curr_pos - start + 1;
                 char temp[len+1];
                 strncpy(temp, lx->input + start, len);
+                temp[len] = '\0';
                 if (is_keyword(temp, &token->type)) {
 
                 } else {
                     token->type = IDENTIFIER;
                     token->identifier = malloc(sizeof(temp));
                     strncpy(token->identifier, temp, len);
+                    token->identifier[len] = '\0';
                 }
             } else {
                 fprintf(stderr, "Lexer Error: Unknown symbol, %c\n", lx->curr_char);     
