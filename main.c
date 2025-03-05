@@ -4,6 +4,7 @@
 
 #include "snode.h"
 #include "parser.h"
+#include "evaluate.h"
 
 void readline(char** buffer, int* buffer_size) {
 /* based on https://brennan.io/2015/01/16/write-a-shell-in-c */
@@ -52,6 +53,7 @@ int parse_userline(char* input_buffer, int input_size, SNode** snode) {
 int main() {
     char* input_buffer = calloc(4, 1);
     int input_size = -1;
+    double result;
 
     SNode* snode = NULL;
     while (1) {
@@ -78,6 +80,14 @@ int main() {
         printf("DEBUG: ");
         sn_debug(snode, debug_eval_atom);
         printf("\n");
+
+        if (snode != NULL) {
+            if (evaluate(snode, &result) == 0) {
+                printf("%f\n", result);
+            } else {
+                fprintf(stderr, "Evaluation Error\n");
+            }
+        }
 
         /* Clean up */
         if (snode != NULL) {
