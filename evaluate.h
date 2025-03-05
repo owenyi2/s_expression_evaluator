@@ -5,8 +5,9 @@
 
 #include "atom.h"
 #include "snode.h"
+#include "hashmap.h"
 
-int evaluate(SNode* snode, double* result) {
+int evaluate(SNode* snode, HashMap* environment, double* result) {
     if (snode->type == LIST) {
         EvalAtom* first_atom = (EvalAtom*) snode->list->atom;
         switch (first_atom->type) {
@@ -36,8 +37,8 @@ int evaluate(SNode* snode, double* result) {
                     switch (first_atom->func) {
                         case FUNC_PLUS: {
                             double a, b;
-                            int err_a = evaluate(snode->list->next, &a);
-                            int err_b = evaluate(snode->list->next->next, &b);
+                            int err_a = evaluate(snode->list->next, environment, &a);
+                            int err_b = evaluate(snode->list->next->next, environment, &b);
                             if (err_a | err_b) {
                                 return 1;
                             } else {
@@ -47,8 +48,8 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_MINUS: {
                             double a, b;
-                            int err_a = evaluate(snode->list->next, &a);
-                            int err_b = evaluate(snode->list->next->next, &b);
+                            int err_a = evaluate(snode->list->next, environment, &a);
+                            int err_b = evaluate(snode->list->next->next, environment, &b);
                             if (err_a | err_b) {
                                 return 1;
                             } else {
@@ -58,8 +59,8 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_TIMES: {
                             double a, b;
-                            int err_a = evaluate(snode->list->next, &a);
-                            int err_b = evaluate(snode->list->next->next, &b);
+                            int err_a = evaluate(snode->list->next, environment, &a);
+                            int err_b = evaluate(snode->list->next->next, environment, &b);
                             if (err_a | err_b) {
                                 return 1;
                             } else {
@@ -69,8 +70,8 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_DIVIDE: {
                             double a, b;
-                            int err_a = evaluate(snode->list->next, &a);
-                            int err_b = evaluate(snode->list->next->next, &b);
+                            int err_a = evaluate(snode->list->next, environment, &a);
+                            int err_b = evaluate(snode->list->next->next, environment, &b);
                             if (err_a | err_b) {
                                 return 1;
                             } else {
@@ -80,8 +81,8 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_POW: {
                             double a, b;
-                            int err_a = evaluate(snode->list->next, &a);
-                            int err_b = evaluate(snode->list->next->next, &b);
+                            int err_a = evaluate(snode->list->next, environment, &a);
+                            int err_b = evaluate(snode->list->next->next, environment, &b);
                             if (err_a | err_b) {
                                 return 1;
                             } else {
@@ -90,18 +91,27 @@ int evaluate(SNode* snode, double* result) {
                             break;
                         }
                         case FUNC_SETQ: {
+                            EvalAtom* identifier = (EvalAtom*)(snode->list->next->atom);
                             if ((snode->list->next->type != ATOM) || 
-                            (((EvalAtom*)(snode->list->next->atom))->type != EVAL_ATOM_IDENTIFIER)) {
+                            (identifier->type != EVAL_ATOM_IDENTIFIER)) {
                                 fprintf(stderr, "evaluate: first argument of setq must be identifier\n");
                                 return 1;
+                            } else {
+                                double b;
+                                int err_b = evaluate(snode->list->next->next, environment, &b);
+                                if (err_b) {
+                                    return 1;
+                                } else {
+                                    *result = b;
+                                    hm_insert(environment, identifier->identifier, &b); 
+                                }
+                                
                             }
-                            fprintf(stderr, "Not Implemented Yet\n");
-                            return 1;
                             break;
                         }
                         case FUNC_SIN: {
                             double a;
-                            int err_a = evaluate(snode->list->next, &a);
+                            int err_a = evaluate(snode->list->next, environment, &a);
                             if (err_a) {
                                 return 1;
                             } else {
@@ -111,7 +121,7 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_COS: { 
                             double a;
-                            int err_a = evaluate(snode->list->next, &a);
+                            int err_a = evaluate(snode->list->next, environment, &a);
                             if (err_a) {
                                 return 1;
                             } else {
@@ -121,7 +131,7 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_TAN: {
                             double a;
-                            int err_a = evaluate(snode->list->next, &a);
+                            int err_a = evaluate(snode->list->next, environment, &a);
                             if (err_a) {
                                 return 1;
                             } else {
@@ -131,7 +141,7 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_EXP: {
                             double a;
-                            int err_a = evaluate(snode->list->next, &a);
+                            int err_a = evaluate(snode->list->next, environment, &a);
                             if (err_a) {
                                 return 1;
                             } else {
@@ -141,7 +151,7 @@ int evaluate(SNode* snode, double* result) {
                         }
                         case FUNC_LOG: {
                             double a;
-                            int err_a = evaluate(snode->list->next, &a);
+                            int err_a = evaluate(snode->list->next, environment, &a);
                             if (err_a) {
                                 return 1;
                             } else {
@@ -159,10 +169,15 @@ int evaluate(SNode* snode, double* result) {
             case EVAL_ATOM_NUMBER:
                 *result = atom->number;
                 break;
-            case EVAL_ATOM_IDENTIFIER:
-                fprintf(stderr, "evaluate: NOT IMPLEMENTED YET\n");
-                return 1;
+            case EVAL_ATOM_IDENTIFIER: {
+                void* value = hm_get(environment, atom->identifier);
+                if (value == NULL) {
+                    fprintf(stderr, "evaluate: unknown identifier\n");
+                    return 1;
+                }
+                *result = *(double*) value;
                 break;
+            }
             case EVAL_ATOM_FUNC:
                 fprintf(stderr, "evaluate: function in unexpected place\n");
                 return 1;

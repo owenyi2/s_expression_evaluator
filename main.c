@@ -5,6 +5,7 @@
 #include "snode.h"
 #include "parser.h"
 #include "evaluate.h"
+#include "hashmap.h"
 
 void readline(char** buffer, int* buffer_size) {
 /* based on https://brennan.io/2015/01/16/write-a-shell-in-c */
@@ -54,6 +55,7 @@ int main() {
     char* input_buffer = calloc(4, 1);
     int input_size = -1;
     double result;
+    HashMap* environment = hm_new_with_capacity(sizeof(double), 128);
 
     SNode* snode = NULL;
     while (1) {
@@ -82,7 +84,7 @@ int main() {
         printf("\n");
 
         if (snode != NULL) {
-            if (evaluate(snode, &result) == 0) {
+            if (evaluate(snode, environment, &result) == 0) {
                 printf("%f\n", result);
             } else {
                 fprintf(stderr, "Evaluation Error\n");
@@ -98,5 +100,6 @@ int main() {
     if (input_buffer != NULL) {
         free(input_buffer);
     }
+    hm_free(&environment);
 }
 
