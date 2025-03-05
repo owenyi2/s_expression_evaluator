@@ -151,6 +151,13 @@ void hm_remove(HashMap* hm, char* key) {
 
 void hm_free(HashMap** hm) {
     da_free(&(*hm)->arena);
+    char* key;
+    for (size_t i = 0; i < (*hm)->capacity; i++) {
+        key = hm_get_key(*hm, i);
+        if (key != NULL) {
+            free(key);
+        }
+    }
     free((*hm)->map);
     free(*hm);
     *hm = NULL;

@@ -31,7 +31,6 @@ typedef struct EvalAtom {
         char* identifier;
     };
     int num_args;
-    void (*free)(void*);
 } EvalAtom;
 
 void ea_free(void* atom) {
@@ -49,77 +48,64 @@ EvalAtom* ea_from_token(Token* token) {
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_PLUS;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case MINUS:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_MINUS;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case TIMES:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_TIMES;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case DIVIDE:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_DIVIDE;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case POW:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_POW;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case SETQ:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_SETQ;
             eval_atom->num_args = 2;
-            eval_atom->free = ea_free;
             break;
         case SIN:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_SIN;
             eval_atom->num_args = 1;
-            eval_atom->free = ea_free;
             break;
         case COS:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_COS;
             eval_atom->num_args = 1;
-            eval_atom->free = ea_free;
             break;
         case TAN:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_TAN;
             eval_atom->num_args = 1;
-            eval_atom->free = ea_free;
             break;
         case EXP:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_EXP;
             eval_atom->num_args = 1;
-            eval_atom->free = ea_free;
             break;
         case LOG:
             eval_atom->type = EVAL_ATOM_FUNC;
             eval_atom->func = FUNC_LOG;
             eval_atom->num_args = 1;
-            eval_atom->free = ea_free;
             break;
         case NUMBER:
             eval_atom->type = EVAL_ATOM_NUMBER;
             eval_atom->number = token->number;
-            eval_atom->free = ea_free;
             break;
         case IDENTIFIER:
             eval_atom->type = EVAL_ATOM_IDENTIFIER;
             eval_atom->identifier = token->identifier;
-            eval_atom->free = ea_free;
             break;
         default:
             fprintf(stderr, "ea_from_token: unable to convert token to atom\n");

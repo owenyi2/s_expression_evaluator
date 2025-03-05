@@ -21,6 +21,7 @@ struct SNode {
         void* atom;
         SNode* list;
     };
+    void (*free_atom)(void*);
 };
 
 SNode* sn_new_empty() {
@@ -29,9 +30,9 @@ SNode* sn_new_empty() {
     return snode;
 }
 
-SNode* sn_new_atom(void* atom) {
+SNode* sn_new_atom(void* atom, void (*free_atom)(void*)) {
     SNode* snode = malloc(sizeof(SNode));
-    *snode = (SNode) { .type = ATOM, .atom = atom, .next = NULL };
+    *snode = (SNode) { .type = ATOM, .atom = atom, .next = NULL, .free_atom = free_atom };
     return snode;
 }
 
@@ -94,7 +95,7 @@ SNode* sn_deep_copy(SNode* snode) {
 
 void sn_free_recursive(SNode* snode) {
     if (snode->type == ATOM) {
-        free(snode->atom);    
+        snode->free_atom(snode->atom);
     } else {
         if (snode->list != NULL) {
             sn_free_recursive(snode->list);

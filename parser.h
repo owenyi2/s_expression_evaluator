@@ -79,7 +79,7 @@ int ps_expect(Parser* ps, enum TokenType token_type, Token* return_token) {
 void ps_atom(Parser* ps, SNode** snode) {
     Token token;
     if (ps_accept_atom(ps, &token)) {
-        *snode = sn_new_atom(ea_from_token(&token));
+        *snode = sn_new_atom(ea_from_token(&token), ea_free);
     } else {
         ps->error = 1;
         // fprintf(stderr, "ps_atom: syntax error\n");
