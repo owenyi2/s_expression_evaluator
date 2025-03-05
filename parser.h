@@ -19,7 +19,9 @@ typedef struct Parser {
 } Parser;
 
 void ps_next_token(Parser* ps) {
-    lx_next_token(ps->lx, &(ps->curr_token));
+    if (lx_next_token(ps->lx, &(ps->curr_token))) {
+        ps->error = 1;
+    }
 }
 
 Parser* ps_new(Lexer* lx) {
@@ -91,6 +93,9 @@ void ps_sexpr(Parser* ps, SNode** snode) {
         *snode = sn_new_empty();
         SNode** current = &((*snode)->list);
         while ((ps->curr_token.type != RPAREN) && (ps->curr_token.type != END)) {
+            if (ps->error) {
+                return;
+            }
             ps_sexpr(ps, current);
             current = &((*current)->next);
         }
